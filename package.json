@@ -1,0 +1,26 @@
+{
+  "name": "university-reward-system",
+  "version": "1.0.0",
+  "description": "University Reward System (URS) — Hardhat contracts",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:token": "hardhat test test/CampusRewardToken.test.js",
+    "test:rewards": "hardhat test test/RewardManager.test.js",
+    "test:voting": "hardhat test test/Voting.test.js",
+    "test:nft": "hardhat test test/AchievementNFT.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.2.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^17.4.2",
+    "hardhat": "^2.29.0"
+  }
+}

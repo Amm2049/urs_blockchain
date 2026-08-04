@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting DApp</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.5.3/dist/ethers.umd.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@metamask/detect-provider@1.2.0/dist/detect-provider.min.js"
+        defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.8.1/dist/cdn.min.js" defer></script>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .card {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: #0070f3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        button:hover {
+            background: #0051a2;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .candidate-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .status {
+            font-weight: bold;
+            color: #e00;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Voting DApp</h2>
+
+    <div x-data="votingApp()" x-init="init()">
+        <div class="card">
+            <button x-show="!isConnected" @click="connect">Connect Wallet</button>
+            <div x-show="isConnected">
+                <p><strong>Connected Account:</strong> <span x-text="account"></span></p>
+                <p><strong>Contract Address:</strong> <span x-text="contractAddress"></span></p>
+                <p><strong>Voting State:</strong> <span class="status" x-text="getStateName(votingState)"></span></p>
+            </div>
+        </div>
+
+        <div x-show="isConnected">
+
+            <div class="card">
+                <h3>Admin Controls (Official Only)</h3>
+                <button @click="startVote()" :disabled="votingState !== 0">Start Voting Phase</button>
+                <button @click="endVote()" :disabled="votingState !== 1">End Voting Phase</button>
+            </div>
+
+            <div class="card">
+                <h3>Candidates</h3>
+                <template x-for="candidate in candidates" :key="candidate.name">
+                    <div class="candidate-row">
+                        <div>
+                            <span x-text="candidate.name"></span>
+                            <span x-show="votingState === 2" x-text="' — Votes: ' + candidate.votes"></span>
+                        </div>
+                        <div>
+                            <button @click="vote(candidate.name)" :disabled="votingState !== 1">Vote</button>
+                        </div>
+                    </div>
+                </template>
+                <button style="background: #555; margin-top: 15px;" @click="reloadData">Refresh Data</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Store your specific Contract Address and ABI here
+        window.contractConfig = {
+            address: '0x3E4501B0dE3668711D933f26116B0AE3992bBAF8',
+            abi: [
+                {
+                    "inputs": [],
+                    "name": "endVote",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "startVote",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "string[]",
+                            "name": "candidateNames",
+                            "type": "string[]"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "constructor"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "candidate",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "voteForCandidate",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "candidateCount",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "candidateList",
+                    "outputs": [
+                        {
+                            "internalType": "string",
+                            "name": "",
+                            "type": "string"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "state",
+                    "outputs": [
+                        {
+                            "internalType": "enum Voting.State",
+                            "name": "",
+                            "type": "uint8"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "candidate",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "totalVotesFor",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ]
+        };
+
+        function votingApp() {
+            return {
+                isConnected: false,
+                ethereum: null,
+                account: '',
+                contractAddress: window.contractConfig.address,
+                votingState: 0, // 0: Created, 1: Voting, 2: Ended
+                candidates: [
+                    { name: "Moana", votes: 0 },
+                    { name: "Evil Dead Burn", votes: 0 },
+                    { name: "The Odyssey", votes: 0 },
+                    { name: "Brand New Day", votes: 0 }
+                ],
+
+                async init() {
+                    this.ethereum = await detectEthereumProvider();
+                    if (this.ethereum) {
+                        window.provider = new ethers.providers.Web3Provider(this.ethereum);
+
+                        // Handle account switching reactively
+                        this.ethereum.on('accountsChanged', (accounts) => {
+                            if (accounts.length > 0) {
+                                this.account = accounts[0];
+                                this.reloadData();
+                            } else {
+                                this.isConnected = false;
+                            }
+                        });
+                    } else {
+                        alert('Please install MetaMask!');
+                    }
+                },
+
+                async connect() {
+                    try {
+                        const accounts = await this.ethereum.request({ method: 'eth_requestAccounts' });
+                        this.account = accounts[0];
+                        this.isConnected = true;
+                        await this.reloadData();
+                    } catch (err) {
+                        console.error("User rejected connection", err);
+                    }
+                },
+
+                getContract(withSigner = false) {
+                    const target = withSigner ? window.provider.getSigner() : window.provider;
+                    return new ethers.Contract(this.contractAddress, window.contractConfig.abi, target);
+                },
+
+                getStateName(stateNum) {
+                    const states = ['Created (Waiting)', 'Voting Active', 'Ended (Results Ready)'];
+                    return states[stateNum] || 'Unknown';
+                },
+
+                async reloadData() {
+                    try {
+                        const contract = this.getContract();
+
+                        // Fetch the current enum state of the contract
+                        this.votingState = await contract.state();
+
+                        // If state is Ended (2), pull the live vote tallies
+                        if (this.votingState === 2) {
+                            for (let candidate of this.candidates) {
+                                const votes = await contract.totalVotesFor(candidate.name);
+                                candidate.votes = votes.toNumber();
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Error reading contract data:", err);
+                    }
+                },
+
+                async startVote() {
+                    try {
+                        const contract = this.getContract(true);
+                        const tx = await contract.startVote();
+                        await tx.wait();
+                        await this.reloadData();
+                    } catch (err) {
+                        alert(err.data?.message || err.message);
+                    }
+                },
+
+                async endVote() {
+                    try {
+                        const contract = this.getContract(true);
+                        const tx = await contract.endVote();
+                        await tx.wait();
+                        await this.reloadData();
+                    } catch (err) {
+                        alert(err.data?.message || err.message);
+                    }
+                },
+
+                async vote(candidateName) {
+                    try {
+                        const contract = this.getContract(true);
+                        const tx = await contract.voteForCandidate(candidateName);
+                        alert("Transaction submitted! Waiting for confirmation...");
+                        await tx.wait();
+                        alert("Vote cast successfully!");
+                        await this.reloadData();
+                    } catch (err) {
+                        alert(err.data?.message || err.message);
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
