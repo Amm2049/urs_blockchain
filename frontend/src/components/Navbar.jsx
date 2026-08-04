@@ -34,16 +34,13 @@ export default function Navbar() {
         {/* Logo */}
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-2.5 group"
+          className="flex items-center gap-2 group"
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-400 via-emerald-500 to-cyan-500 flex items-center justify-center glow-brand shadow-lg transition-transform duration-200 group-hover:scale-105">
-            <svg className="w-4 h-4 text-dark-900" viewBox="0 0 512 512" fill="none">
-              <path d="M160 160 V280 C160 340, 200 376, 256 376 C312 376, 352 340, 352 280 V160 H304 V276 C304 310, 284 328, 256 328 C228 328, 208 310, 208 276 V160 H160 Z" fill="currentColor" />
-              <path d="M256 120 L267 142 L291 146 L274 163 L278 187 L256 176 L234 187 L238 163 L221 146 L245 142 Z" fill="#f59e0b" />
-            </svg>
+          <div className="w-8 h-8 rounded-lg bg-brand-gradient flex items-center justify-center glow-brand">
+            <span className="text-white font-bold text-sm">U</span>
           </div>
-          <span className="font-bold text-white text-sm hidden sm:block tracking-wide">
-            URS <span className="text-brand-400/80 font-mono text-xs ml-1 px-1.5 py-0.5 rounded bg-brand-500/10 border border-brand-500/20">Sepolia</span>
+          <span className="font-bold text-white text-sm hidden sm:block">
+            URS <span className="text-white/30 font-normal">· Sepolia</span>
           </span>
         </button>
 
