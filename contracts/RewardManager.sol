@@ -43,6 +43,7 @@ contract RewardManager is Ownable {
     error ZeroCost();
     error InsufficientBalance();
     error ZeroAddress();
+    error AdminCannotRedeem();
 
     event RewardCreated(uint256 indexed rewardId, string title, uint256 cost);
     event RewardActiveUpdated(uint256 indexed rewardId, bool active);
@@ -82,6 +83,7 @@ contract RewardManager is Ownable {
 
     /// @notice Student redeems an active reward: burns CRT and records the redemption.
     function redeem(uint256 rewardId) external {
+        if (msg.sender == owner()) revert AdminCannotRedeem();
         Reward storage reward = _getReward(rewardId);
         if (!reward.active) revert RewardInactive();
 

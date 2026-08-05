@@ -8,14 +8,14 @@ function statusLabel(s) {
   return s === 0 ? 'Open' : 'Closed';
 }
 
-function ActivityCard({ activity, account, contracts }) {
+function ActivityCard({ activity, account, isAdmin, contracts }) {
   const [eligible, setEligible]   = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [claimed, setClaimed]     = useState(false);
   const [loading, setLoading]     = useState(true);
 
   useEffect(() => {
-    if (!account || !contracts) return;
+    if (!account || !contracts || isAdmin) return;
     const load = async () => {
       try {
         const c = contracts.Activity();
@@ -31,7 +31,7 @@ function ActivityCard({ activity, account, contracts }) {
       setLoading(false);
     };
     load();
-  }, [activity.id, account, contracts]);
+  }, [activity.id, account, isAdmin, contracts]);
 
   const handleJoin = async () => {
     const tx = await contracts.Activityw().join(activity.id);
@@ -67,7 +67,7 @@ function ActivityCard({ activity, account, contracts }) {
       </div>
 
       {/* Status flags */}
-      {!loading && account && (
+      {!loading && account && !isAdmin && (
         <div className="flex flex-wrap gap-2 text-xs">
           {eligible && (
             <span className="badge-pill bg-blue-500/10 text-blue-400 border border-blue-500/20">
@@ -88,21 +88,29 @@ function ActivityCard({ activity, account, contracts }) {
       )}
 
       {/* Actions */}
-      {account && !loading && (
+      {account && (
         <div className="flex gap-2 mt-auto pt-2 border-t border-white/[0.06]">
-          {!eligible && isOpen && (
-            <TxButton label="Join" loadingLabel="Joining…" onClick={handleJoin} />
-          )}
-          {confirmed && !claimed && (
-            <TxButton label="Claim CRT + Badge" loadingLabel="Claiming…" onClick={handleClaim} variant="success" />
-          )}
-          {eligible && !confirmed && !claimed && (
-            <div className="flex items-center gap-1.5 text-xs text-white/30">
-              <LockClosedIcon className="w-3.5 h-3.5" /> Awaiting admin confirmation
-            </div>
-          )}
-          {claimed && (
-            <span className="text-xs text-white/30">Reward claimed · NFT badge minted</span>
+          {isAdmin ? (
+            <span className="text-xs text-white/40 font-medium">Admins manage activities from the Admin Panel</span>
+          ) : (
+            !loading && (
+              <>
+                {!eligible && isOpen && (
+                  <TxButton label="Join" loadingLabel="Joining…" onClick={handleJoin} />
+                )}
+                {confirmed && !claimed && (
+                  <TxButton label="Claim CRT + Badge" loadingLabel="Claiming…" onClick={handleClaim} variant="success" />
+                )}
+                {eligible && !confirmed && !claimed && (
+                  <div className="flex items-center gap-1.5 text-xs text-white/30">
+                    <LockClosedIcon className="w-3.5 h-3.5" /> Awaiting admin confirmation
+                  </div>
+                )}
+                {claimed && (
+                  <span className="text-xs text-white/30">Reward claimed · NFT badge minted</span>
+                )}
+              </>
+            )
           )}
         </div>
       )}
@@ -115,7 +123,7 @@ function ActivityCard({ activity, account, contracts }) {
 }
 
 export default function Activities() {
-  const { account, contracts } = useWallet();
+  const { account, isAdmin, contracts } = useWallet();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading]       = useState(true);
 
@@ -148,7 +156,11 @@ export default function Activities() {
     <div className="animate-fade-in">
       <div className="mb-8">
         <h1 className="section-title">Activities</h1>
-        <p className="section-subtitle">Join activities, get confirmed by admin, then claim your CRT + NFT badge.</p>
+        <p className="section-subtitle">
+          {isAdmin 
+            ? "View created campus activities. Manage status and confirm student attendance in the Admin Panel." 
+            : "Join activities, get confirmed by admin, then claim your CRT + NFT badge."}
+        </p>
       </div>
 
       {loading && (
@@ -166,7 +178,7 @@ export default function Activities() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {activities.map((act) => (
-          <ActivityCard key={act.id.toString()} activity={act} account={account} contracts={contracts} />
+          <ActivityCard key={act.id.toString()} activity={act} account={account} isAdmin={isAdmin} contracts={contracts} />
         ))}
       </div>
     </div>

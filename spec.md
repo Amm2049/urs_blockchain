@@ -92,16 +92,16 @@ Universities run workshops, competitions, seminars, volunteer events, etc., but 
 
 ### User Roles
 
-| Role | Responsibilities |
-|---|---|
-| Administrator | Create activities � Confirm attendance � Create rewards � View pending redemptions � Create polls � Mint NFTs |
-| Student | Connect wallet � Join activities � Claim CRT � View balance � Redeem � Vote � View NFTs |
+| Role | Responsibilities | Restrictions |
+|---|---|---|
+| Administrator | Create activities · Confirm attendance · Create rewards · Create polls · Manage platform configuration | Restricted on-chain & UI from joining activities (`AdminCannotJoin`), claiming CRT/NFTs (`AdminCannotClaim`), voting (`AdminCannotVote`), redeeming (`AdminCannotRedeem`), or holding NFTs (`AdminCannotReceiveNFT`). |
+| Student | Connect wallet · Join activities · Claim CRT + NFT badges · View balance & dashboard · Redeem rewards · Vote on polls · View NFT gallery | Participant role; cannot call owner-only management functions. |
 
 ---
 
 ## Functional Requirements
 
-### Module 1 � Wallet Connection
+### Module 1  Wallet Connection
 
 Student can: connect MetaMask, disconnect, view address.
 

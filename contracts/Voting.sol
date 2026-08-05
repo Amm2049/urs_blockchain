@@ -42,6 +42,7 @@ contract Voting is Ownable {
     error InsufficientCRT();
     error ZeroAddress();
     error NotVoted();
+    error AdminCannotVote();
 
     event PollCreated(
         uint256 indexed pollId, string question, uint256 endTime, uint256 optionCount
@@ -83,6 +84,7 @@ contract Voting is Ownable {
 
     /// @notice Student casts one vote if they hold ≥1 CRT and the poll has not ended.
     function vote(uint256 pollId, uint256 optionIndex) external {
+        if (msg.sender == owner()) revert AdminCannotVote();
         Poll storage poll = _getPoll(pollId);
         if (block.timestamp >= poll.endTime) revert PollClosed();
         if (hasVoted[pollId][msg.sender]) revert AlreadyVoted();

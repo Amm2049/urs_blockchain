@@ -75,6 +75,7 @@ function token() external view returns (address)
 - Must be set as Token `minter` before `claim()` works.
 - Eligible ≠ Confirmed ≠ Claimed — three separate flags.
 - `closeActivity` stops new joins; confirm/claim still allowed.
+- Contract `owner` (admin) is blocked from calling `join()` (`AdminCannotJoin`) or `claim()` (`AdminCannotClaim`).
 
 ---
 
@@ -111,6 +112,7 @@ function token() external view returns (address)
 - Physical fulfillment is **off-chain** (spreadsheet); no `markFulfilled` on-chain.
 - `cost` uses CRT base units (18 decimals). Frontend: `parseEther("100")` for 100 CRT.
 - Inactive rewards cannot be redeemed; existing redemptions remain on-chain.
+- Contract `owner` (admin) is blocked from calling `redeem()` (`AdminCannotRedeem`).
 
 ---
 
@@ -148,6 +150,7 @@ function token() external view returns (address)
 - Poll close = check-on-action: `vote()` reverts when `block.timestamp >= endTime` (no keeper).
 - Multiple polls may be open at once; one vote per wallet per poll.
 - Voting does **not** need minter/burner roles — only a Token address for `balanceOf`.
+- Contract `owner` (admin) is blocked from calling `vote()` (`AdminCannotVote`).
 
 ---
 
@@ -183,7 +186,7 @@ function balanceOf(address owner) external view returns (uint256)
 - Soulbound: wallet-to-wallet transfers revert (`Soulbound`). Mint still works.
 - One badge per activity per student — a student can hold many badges.
 - Auto-minted inside `ActivityManager.claim()`. Admin does **not** call this manually.
-- No Tier enum, no GitLab URI, no `tokenURI`. Activity data (id + title) stored on-chain.
+- Cannot be minted to contract `owner` (`AdminCannotReceiveNFT`).
 - Deploy wiring: `AchievementNFT.setMinter(ActivityManager)` once after deploy.
 
 ---

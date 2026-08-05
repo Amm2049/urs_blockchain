@@ -65,6 +65,17 @@ describe("Voting", function () {
     ).to.be.revertedWithCustomError(voting, "EndTimeNotFuture");
   });
 
+  it("reverts when admin attempts to vote", async function () {
+    const { token, voting, owner } = await loadFixture(deployFixture);
+    await openPoll(voting);
+    await fundStudent(token, owner, "10");
+
+    await expect(voting.connect(owner).vote(1, 0)).to.be.revertedWithCustomError(
+      voting,
+      "AdminCannotVote"
+    );
+  });
+
   it("eligible student votes once; results and history update", async function () {
     const { token, voting, student } = await loadFixture(deployFixture);
     await openPoll(voting);

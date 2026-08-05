@@ -50,6 +50,8 @@ contract ActivityManager is Ownable {
     error NotConfirmed();
     error AlreadyClaimed();
     error ZeroAddress();
+    error AdminCannotJoin();
+    error AdminCannotClaim();
 
     event ActivityCreated(uint256 indexed activityId, string title, uint256 rewardAmount);
     event ActivityClosed(uint256 indexed activityId);
@@ -93,6 +95,7 @@ contract ActivityManager is Ownable {
 
     /// @notice Student self-registers for an open activity (eligible list).
     function join(uint256 activityId) external {
+        if (msg.sender == owner()) revert AdminCannotJoin();
         Activity storage activity = _getActivity(activityId);
         if (activity.status != Status.Open) revert ActivityIsClosed();
         if (isEligible[activityId][msg.sender]) revert AlreadyJoined();
@@ -119,6 +122,7 @@ contract ActivityManager is Ownable {
     /// @notice Confirmed student claims CRT and receives a soulbound attendance NFT.
     ///         Both actions happen in the same transaction — student pays gas once.
     function claim(uint256 activityId) external {
+        if (msg.sender == owner()) revert AdminCannotClaim();
         Activity storage activity = _getActivity(activityId);
         if (!isConfirmed[activityId][msg.sender]) revert NotConfirmed();
         if (hasClaimed[activityId][msg.sender])   revert AlreadyClaimed();

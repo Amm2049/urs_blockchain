@@ -55,7 +55,7 @@ function BadgeCard({ tokenId, activityId, activityTitle }) {
 }
 
 export default function NFTGallery() {
-  const { account, contracts } = useWallet();
+  const { account, isAdmin, contracts } = useWallet();
   const [badges, setBadges]     = useState([]);
   const [total, setTotal]       = useState(0);
   const [loading, setLoading]   = useState(true);
@@ -69,7 +69,7 @@ export default function NFTGallery() {
         const totalMinted = await nc.totalMinted();
         setTotal(totalMinted.toNumber());
 
-        if (account) {
+        if (account && !isAdmin) {
           const tokenIds = await nc.tokensOf(account);
           const items = await Promise.all(
             tokenIds.map(async (tokenId) => {
@@ -85,14 +85,18 @@ export default function NFTGallery() {
       setLoading(false);
     };
     load();
-  }, [account, contracts]);
+  }, [account, isAdmin, contracts]);
 
   return (
     <div className="animate-fade-in">
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="section-title">NFT Gallery</h1>
-          <p className="section-subtitle">Your soulbound achievement badges — earned, never transferred.</p>
+          <p className="section-subtitle">
+            {isAdmin 
+              ? "Platform soulbound achievement badges issued to student participants." 
+              : "Your soulbound achievement badges — earned, never transferred."}
+          </p>
         </div>
         <div className="glass-card px-4 py-2 text-center">
           <p className="text-2xl font-bold text-white">{total}</p>
@@ -100,7 +104,17 @@ export default function NFTGallery() {
         </div>
       </div>
 
-      {!account && (
+      {isAdmin && (
+        <div className="glass-card p-12 text-center border-brand-500/20 bg-brand-500/5">
+          <PhotoIcon className="w-14 h-14 mx-auto mb-4 text-brand-400 opacity-60" />
+          <h3 className="text-lg font-semibold text-white mb-2">Student Achievement Gallery</h3>
+          <p className="text-white/60 max-w-md mx-auto text-sm leading-relaxed">
+            Admins manage platform activities and do not earn or hold NFT achievement badges. Badges are soulbound rewards issued strictly to student participants upon activity completion.
+          </p>
+        </div>
+      )}
+
+      {!isAdmin && !account && (
         <div className="glass-card p-16 text-center">
           <PhotoIcon className="w-14 h-14 mx-auto mb-4 text-white/20" />
           <p className="text-white/50 mb-2">Connect your wallet to view your badges.</p>
@@ -108,13 +122,13 @@ export default function NFTGallery() {
         </div>
       )}
 
-      {account && loading && (
+      {!isAdmin && account && loading && (
         <div className="flex items-center justify-center py-20">
           <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
-      {account && !loading && badges.length === 0 && (
+      {!isAdmin && account && !loading && badges.length === 0 && (
         <div className="glass-card p-16 text-center">
           <PhotoIcon className="w-14 h-14 mx-auto mb-4 text-white/20" />
           <p className="text-white/50 mb-2">No badges yet.</p>
@@ -122,7 +136,7 @@ export default function NFTGallery() {
         </div>
       )}
 
-      {account && !loading && badges.length > 0 && (
+      {!isAdmin && account && !loading && badges.length > 0 && (
         <>
           <div className="mb-4 text-sm text-white/40">
             You hold <span className="text-white font-semibold">{badges.length}</span> badge{badges.length !== 1 ? 's' : ''}

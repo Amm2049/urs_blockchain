@@ -4,11 +4,12 @@ import { useWallet } from '../hooks/useWallet';
 import TxButton from '../components/TxButton';
 import { ShoppingBagIcon, BoltIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
-function RewardCard({ reward, balance, account, contracts, onRedeemed }) {
+function RewardCard({ reward, balance, account, isAdmin, contracts, onRedeemed }) {
   const cost      = ethers.utils.formatEther(reward.cost);
   const canAfford = account && balance && parseFloat(ethers.utils.formatEther(balance)) >= parseFloat(cost);
 
   const handleRedeem = async () => {
+    if (isAdmin) return;
     const tx = await contracts.Rewardw().redeem(reward.id);
     await tx.wait();
     onRedeemed();
@@ -39,7 +40,9 @@ function RewardCard({ reward, balance, account, contracts, onRedeemed }) {
       </div>
 
       {account ? (
-        reward.active ? (
+        isAdmin ? (
+          <p className="text-xs text-white/40 font-medium">Admins manage rewards from the Admin Panel.</p>
+        ) : reward.active ? (
           canAfford ? (
             <TxButton
               label={`Redeem for ${cost} CRT`}
@@ -63,7 +66,7 @@ function RewardCard({ reward, balance, account, contracts, onRedeemed }) {
 }
 
 export default function RewardStore() {
-  const { account, contracts } = useWallet();
+  const { account, isAdmin, contracts } = useWallet();
   const [rewards, setRewards]   = useState([]);
   const [balance, setBalance]   = useState(null);
   const [loading, setLoading]   = useState(true);
@@ -80,7 +83,7 @@ export default function RewardStore() {
       }
       setRewards(items);
 
-      if (account) {
+      if (account && !isAdmin) {
         const bal = await contracts.CRT().balanceOf(account);
         setBalance(bal);
       }
@@ -91,16 +94,20 @@ export default function RewardStore() {
     }
   };
 
-  useEffect(() => { load(); }, [account, contracts]); // eslint-disable-line
+  useEffect(() => { load(); }, [account, isAdmin, contracts]); // eslint-disable-line
 
   return (
     <div className="animate-fade-in">
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="section-title">Reward Store</h1>
-          <p className="section-subtitle">Spend your CRT on real campus rewards.</p>
+          <p className="section-subtitle">
+            {isAdmin 
+              ? "View redeemable rewards catalog. Manage items and availability in the Admin Panel." 
+              : "Spend your CRT on real campus rewards."}
+          </p>
         </div>
-        {account && balance !== null && (
+        {account && !isAdmin && balance !== null && (
           <div className="glass-card px-4 py-2 flex items-center gap-2">
             <BoltIcon className="w-4 h-4 text-amber-400" />
             <span className="text-amber-400 font-semibold">{parseFloat(ethers.utils.formatEther(balance)).toFixed(2)}</span>
@@ -129,6 +136,7 @@ export default function RewardStore() {
             reward={r}
             balance={balance}
             account={account}
+            isAdmin={isAdmin}
             contracts={contracts}
             onRedeemed={load}
           />

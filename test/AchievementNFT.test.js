@@ -65,6 +65,13 @@ describe("AchievementNFT", function () {
     ).to.be.revertedWithCustomError(nft, "NotMinter");
   });
 
+  it("rejects minting to admin owner", async function () {
+    const { nft, minter, owner } = await loadFixture(deployFixture);
+    await expect(
+      nft.connect(minter).mint(owner.address, 1n, "AI Workshop")
+    ).to.be.revertedWithCustomError(nft, "AdminCannotReceiveNFT");
+  });
+
   it("rejects zero-address recipient", async function () {
     const { nft, minter } = await loadFixture(deployFixture);
     await expect(

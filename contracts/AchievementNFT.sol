@@ -31,6 +31,7 @@ contract AchievementNFT is ERC721, Ownable {
     error NotMinter();
     error ZeroAddress();
     error EmptyTitle();
+    error AdminCannotReceiveNFT();
 
     // ── Events ─────────────────────────────────────────────────────────────────
 
@@ -70,8 +71,9 @@ contract AchievementNFT is ERC721, Ownable {
         external
         returns (uint256 tokenId)
     {
-        if (msg.sender != minter)            revert NotMinter();
-        if (to == address(0))                revert ZeroAddress();
+        if (msg.sender != minter)             revert NotMinter();
+        if (to == address(0))                 revert ZeroAddress();
+        if (to == owner())                    revert AdminCannotReceiveNFT();
         if (bytes(activityTitle).length == 0) revert EmptyTitle();
 
         tokenId = _nextTokenId++;

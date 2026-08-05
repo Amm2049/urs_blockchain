@@ -5,13 +5,19 @@ import {
   MegaphoneIcon, PhotoIcon, WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 
-const navItems = [
+const studentNavItems = [
   { to: '/',           label: 'Home',        Icon: HomeIcon },
   { to: '/activities', label: 'Activities',  Icon: BoltIcon },
   { to: '/dashboard',  label: 'Dashboard',   Icon: Squares2X2Icon },
   { to: '/store',      label: 'Reward Store',Icon: ShoppingBagIcon },
   { to: '/voting',     label: 'Voting',      Icon: MegaphoneIcon },
   { to: '/gallery',    label: 'NFT Gallery', Icon: PhotoIcon },
+];
+
+const adminNavItems = [
+  { to: '/',           label: 'Home',                Icon: HomeIcon },
+  { to: '/activities', label: 'Activities Overview', Icon: BoltIcon },
+  { to: '/admin',      label: 'Admin Panel',         Icon: WrenchScrewdriverIcon },
 ];
 
 function shortAddr(addr) {
@@ -22,9 +28,7 @@ export default function Navbar() {
   const { account, isAdmin, connecting, connect, disconnect, isWrongNetwork } = useWallet();
   const navigate = useNavigate();
 
-  const items = isAdmin
-    ? [...navItems, { to: '/admin', label: 'Admin', Icon: WrenchScrewdriverIcon }]
-    : navItems;
+  const items = isAdmin ? adminNavItems : studentNavItems;
 
   return (
     <>

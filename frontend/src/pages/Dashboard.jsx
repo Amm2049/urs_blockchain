@@ -11,13 +11,16 @@ function shortAddr(addr) {
 }
 
 export default function Dashboard() {
-  const { account, contracts } = useWallet();
+  const { account, isAdmin, contracts } = useWallet();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!account || !contracts) return;
+    if (!account || !contracts || isAdmin) {
+      setLoading(false);
+      return;
+    }
     const load = async () => {
       try {
         const [crt, nft, reward, voting, activity] = [
@@ -73,7 +76,36 @@ export default function Dashboard() {
       setLoading(false);
     };
     load();
-  }, [account, contracts]);
+  }, [account, isAdmin, contracts]);
+
+  if (isAdmin) {
+    return (
+      <div className="glass-card p-12 text-center animate-fade-in space-y-6 max-w-2xl mx-auto my-8 border-brand-500/20">
+        <TrophyIcon className="w-14 h-14 mx-auto text-brand-400 opacity-80" />
+        <div>
+          <h2 className="text-2xl font-bold text-white">Admin Management Hub</h2>
+          <p className="text-xs font-mono text-brand-400 mt-1">{shortAddr(account)}</p>
+        </div>
+        <p className="text-white/60 text-sm leading-relaxed">
+          Student dashboards display personal CRT balances, earned badges, and voting history. As an admin, your operations are concentrated in the Admin Panel.
+        </p>
+        <div className="flex justify-center gap-4 pt-2">
+          <button
+            onClick={() => navigate('/admin')}
+            className="px-5 py-2.5 rounded-xl bg-brand-gradient text-white text-sm font-semibold hover:opacity-90 transition-all glow-brand"
+          >
+            Go to Admin Panel
+          </button>
+          <button
+            onClick={() => navigate('/activities')}
+            className="px-5 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-white text-sm font-semibold transition-all border border-white/10"
+          >
+            Activities Overview
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!account) {
     return (

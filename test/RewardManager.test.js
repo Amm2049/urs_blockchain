@@ -60,6 +60,17 @@ describe("RewardManager", function () {
     expect((await rewards.getReward(1)).active).to.equal(true);
   });
 
+  it("reverts when admin attempts to redeem", async function () {
+    const { token, rewards, owner } = await loadFixture(deployFixture);
+    await rewards.createReward("Coffee Coupon", ethers.parseEther("100"));
+    await fundStudent(token, owner, "150");
+
+    await expect(rewards.connect(owner).redeem(1)).to.be.revertedWithCustomError(
+      rewards,
+      "AdminCannotRedeem"
+    );
+  });
+
   it("student redeems: burns CRT and records redemption", async function () {
     const { token, rewards, student } = await loadFixture(deployFixture);
     await rewards.createReward("Coffee Coupon", ethers.parseEther("100"));

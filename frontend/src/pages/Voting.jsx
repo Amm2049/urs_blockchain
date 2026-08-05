@@ -3,7 +3,7 @@ import { useWallet } from '../hooks/useWallet';
 import TxButton from '../components/TxButton';
 import { MegaphoneIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
-function PollCard({ poll, account, contracts, crtBalance }) {
+function PollCard({ poll, account, isAdmin, contracts, crtBalance }) {
   const [options, setOptions]       = useState([]);
   const [results, setResults]       = useState([]);
   const [voted, setVoted]           = useState(false);
@@ -35,7 +35,7 @@ function PollCard({ poll, account, contracts, crtBalance }) {
         setOptions(opts);
         setResults(res.map(r => r.toNumber()));
 
-        if (account) {
+        if (account && !isAdmin) {
           const hv = await vc.hasVoted(poll.id, account);
           setVoted(hv);
           if (hv) {
@@ -47,10 +47,10 @@ function PollCard({ poll, account, contracts, crtBalance }) {
       setLoading(false);
     };
     load();
-  }, [poll.id, account, contracts]);
+  }, [poll.id, account, isAdmin, contracts]);
 
   const handleVote = async () => {
-    if (selectedOpt === null) return;
+    if (selectedOpt === null || isAdmin) return;
     const tx = await contracts.Votingw().vote(poll.id, selectedOpt);
     await tx.wait();
     setVoted(true);
@@ -94,8 +94,8 @@ function PollCard({ poll, account, contracts, crtBalance }) {
 
             return (
               <div key={idx}>
-                {/* Vote option button (when open and not yet voted) */}
-                {isOpen && !voted && account && hasEnoughCRT && (
+                {/* Vote option button (when open, student logged in, has CRT, and not admin) */}
+                {isOpen && !voted && account && !isAdmin && hasEnoughCRT && (
                   <button
                     onClick={() => setSelected(isSelected ? null : idx)}
                     className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${
@@ -108,8 +108,8 @@ function PollCard({ poll, account, contracts, crtBalance }) {
                   </button>
                 )}
 
-                {/* Result bar (always shown after voting or poll closed) */}
-                {(voted || !isOpen || !account) && (
+                {/* Result bar (shown after voting, poll closed, or for admin) */}
+                {(voted || !isOpen || !account || isAdmin) && (
                   <div className={`px-4 py-2.5 rounded-xl border ${
                     isVoted
                       ? 'border-brand-500/40 bg-brand-500/10'
@@ -131,8 +131,8 @@ function PollCard({ poll, account, contracts, crtBalance }) {
                   </div>
                 )}
 
-                {/* Show option text-only if open, not voted, no account or insufficient CRT */}
-                {isOpen && !voted && (!account || !hasEnoughCRT) && (
+                {/* Show option text-only if open, not voted, student with no account or insufficient CRT */}
+                {isOpen && !voted && !isAdmin && (!account || !hasEnoughCRT) && (
                   <div className="px-4 py-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] text-sm text-white/50">
                     {opt}
                   </div>
@@ -143,8 +143,15 @@ function PollCard({ poll, account, contracts, crtBalance }) {
         </div>
       )}
 
+      {/* Admin notice */}
+      {isAdmin && (
+        <p className="text-xs text-white/40 bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2">
+          Admins manage polls from the Admin Panel and cannot cast votes.
+        </p>
+      )}
+
       {/* Vote submit */}
-      {isOpen && !voted && account && hasEnoughCRT && (
+      {isOpen && !voted && account && !isAdmin && hasEnoughCRT && (
         <TxButton
           label="Submit Vote"
           loadingLabel="Submitting…"
@@ -154,7 +161,7 @@ function PollCard({ poll, account, contracts, crtBalance }) {
       )}
 
       {/* Eligibility notices */}
-      {isOpen && !voted && account && !hasEnoughCRT && (
+      {isOpen && !voted && account && !isAdmin && !hasEnoughCRT && (
         <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
           You need at least 1 CRT to vote. Earn CRT by claiming activities.
         </p>
@@ -170,10 +177,10 @@ function PollCard({ poll, account, contracts, crtBalance }) {
 }
 
 export default function Voting() {
-  const { account, contracts } = useWallet();
-  const [polls, setPolls]       = useState([]);
-  const [crtBal, setCrtBal]     = useState(null);
-  const [loading, setLoading]   = useState(true);
+  const { account, isAdmin, contracts } = useWallet();
+  const [polls, setPolls]         = useState([]);
+  const [crtBal, setCrtBal]       = useState(null);
+  const [loading, setLoading]     = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -181,15 +188,16 @@ export default function Voting() {
         const vc = contracts.Voting();
         if (!vc) return;
         const count = await vc.pollCount();
-        const items = [];
-        for (let i = 1; i <= count.toNumber(); i++) {
-          const [id, question, endTime, optionCount, open] = await vc.getPoll(i);
-          items.push({ id, question, endTime, optionCount, open });
-        }
+        const total = count.toNumber();
+
+        const items = await Promise.all(
+          Array.from({ length: total }, (_, i) => vc.getPoll(i + 1))
+        );
         setPolls(items.reverse());
 
         if (account) {
-          const bal = await contracts.CRT().balanceOf(account);
+          const tc  = contracts.Token();
+          const bal = await tc.balanceOf(account);
           setCrtBal(bal);
         }
       } catch (err) {
@@ -209,7 +217,11 @@ export default function Voting() {
     <div className="animate-fade-in">
       <div className="mb-8">
         <h1 className="section-title">Voting</h1>
-        <p className="section-subtitle">Vote on campus polls. Requires at least 1 CRT. One vote per poll.</p>
+        <p className="section-subtitle">
+          {isAdmin 
+            ? "View active and past poll results. Admins create and manage polls in the Admin Panel." 
+            : "Vote on campus polls. Requires at least 1 CRT. One vote per poll."}
+        </p>
       </div>
 
       {loading && (
@@ -232,7 +244,7 @@ export default function Voting() {
           </h2>
           <div className="grid md:grid-cols-2 gap-4">
             {open.map(p => (
-              <PollCard key={p.id.toString()} poll={p} account={account} contracts={contracts} crtBalance={crtBal} />
+              <PollCard key={p.id.toString()} poll={p} account={account} isAdmin={isAdmin} contracts={contracts} crtBalance={crtBal} />
             ))}
           </div>
         </section>
@@ -245,7 +257,7 @@ export default function Voting() {
           </h2>
           <div className="grid md:grid-cols-2 gap-4">
             {closed.map(p => (
-              <PollCard key={p.id.toString()} poll={p} account={account} contracts={contracts} crtBalance={crtBal} />
+              <PollCard key={p.id.toString()} poll={p} account={account} isAdmin={isAdmin} contracts={contracts} crtBalance={crtBal} />
             ))}
           </div>
         </section>

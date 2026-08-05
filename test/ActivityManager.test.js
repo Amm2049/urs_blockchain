@@ -73,6 +73,26 @@ describe("ActivityManager", function () {
     );
   });
 
+  it("reverts when admin attempts to join", async function () {
+    const { activities, owner } = await loadFixture(deployFixture);
+    await openActivity(activities);
+
+    await expect(activities.connect(owner).join(1)).to.be.revertedWithCustomError(
+      activities,
+      "AdminCannotJoin"
+    );
+  });
+
+  it("reverts when admin attempts to claim", async function () {
+    const { activities, owner } = await loadFixture(deployFixture);
+    await openActivity(activities);
+
+    await expect(activities.connect(owner).claim(1)).to.be.revertedWithCustomError(
+      activities,
+      "AdminCannotClaim"
+    );
+  });
+
   it("blocks join after close", async function () {
     const { activities, student } = await loadFixture(deployFixture);
     await openActivity(activities);
