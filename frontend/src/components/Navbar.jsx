@@ -15,9 +15,7 @@ const studentNavItems = [
 ];
 
 const adminNavItems = [
-  { to: '/',           label: 'Home',                Icon: HomeIcon },
-  { to: '/activities', label: 'Activities Overview', Icon: BoltIcon },
-  { to: '/admin',      label: 'Admin Panel',         Icon: WrenchScrewdriverIcon },
+  { to: '/admin',      label: 'Admin Command Center', Icon: WrenchScrewdriverIcon },
 ];
 
 function shortAddr(addr) {
@@ -37,7 +35,7 @@ export default function Navbar() {
 
         {/* Logo */}
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate(isAdmin ? '/admin' : '/')}
           className="flex items-center gap-2 group"
         >
           <div className="w-8 h-8 rounded-lg bg-brand-gradient flex items-center justify-center glow-brand">

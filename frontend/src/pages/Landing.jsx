@@ -38,13 +38,19 @@ const features = [
 ];
 
 export default function Landing() {
-  const { account, connect, connecting } = useWallet();
+  const { account, isAdmin, connect, connecting } = useWallet();
   const navigate = useNavigate();
   const [walletError, setWalletError] = useState('');
 
+  useEffect(() => {
+    if (account && isAdmin) {
+      navigate('/admin', { replace: true });
+    }
+  }, [account, isAdmin, navigate]);
+
   const handleCTA = async () => {
     if (account) {
-      navigate('/activities');
+      navigate(isAdmin ? '/admin' : '/activities');
       return;
     }
     setWalletError('');
@@ -53,7 +59,7 @@ export default function Landing() {
       // Only navigate if the wallet was actually connected (user didn't cancel)
       const accounts = await window.ethereum?.request({ method: 'eth_accounts' });
       if (accounts && accounts.length > 0) {
-        navigate('/activities');
+        navigate(isAdmin ? '/admin' : '/activities');
       } else {
         setWalletError('Connection cancelled. Please approve MetaMask to continue.');
       }
