@@ -33,6 +33,49 @@ function Field({ label, children }) {
   );
 }
 
+function RegisteredStudentRow({ actId, studentAddr, isConfirmed, contracts, onConfirmed }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    try {
+      const tx = await contracts.Activityw().confirmAttendance(actId, studentAddr);
+      await tx.wait();
+      await onConfirmed();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+      <span className="text-xs font-mono text-white/70">{studentAddr}</span>
+      {isConfirmed ? (
+        <span className="badge-pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs flex items-center gap-1">
+          <CheckCircleIcon className="w-3 h-3" /> Confirmed
+        </span>
+      ) : (
+        <button
+          onClick={handleConfirm}
+          disabled={loading}
+          className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 text-xs font-medium transition-all disabled:opacity-50 flex items-center gap-1"
+        >
+          {loading ? (
+            <>
+              <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+              Confirming…
+            </>
+          ) : (
+            'Confirm'
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function AdminPanel() {
   const { account, isAdmin, contracts } = useWallet();
 
@@ -178,28 +221,50 @@ export default function AdminPanel() {
       </Section>
 
       {/* Activities overview */}
-      <Section title={`Activities Overview (${activities.length})`}>
+      <Section title={`Activities Overview (${activities.length})`} defaultOpen={true}>
         {activities.length === 0 ? (
           <p className="text-white/30 text-sm">No activities yet.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {activities.map(act => (
-              <div key={act.id.toString()} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.07] space-y-2">
+              <div key={act.id.toString()} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.07] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-white text-sm">{act.title}</span>
+                  <div>
+                    <span className="font-medium text-white text-sm">{act.title}</span>
+                    <span className="text-xs text-white/30 ml-2">#Activity {act.id.toString()}</span>
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-amber-400">{ethers.utils.formatEther(act.rewardAmount)} CRT</span>
-                <span className={`badge-pill text-xs ${act.status === 0 ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30' : 'bg-white/5 text-white/30 border border-white/10'}`}>
+                    <span className={`badge-pill text-xs ${act.status === 0 ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30' : 'bg-white/5 text-white/30 border border-white/10'}`}>
                       {act.status === 0 ? 'Open' : 'Closed'}
                     </span>
                   </div>
                 </div>
-                <div className="text-xs text-white/30">
-                  {act.eligible.length} registered · {act.confirmed.length} confirmed
+
+                <div className="text-xs text-white/40 flex items-center justify-between border-t border-white/[0.04] pt-2">
+                  <span>Registered Students ({act.eligible.length})</span>
+                  <span>{act.confirmed.length} Confirmed</span>
                 </div>
-                {act.eligible.length > 0 && (
-                  <div className="text-xs text-white/25 font-mono break-all">
-                    {act.eligible.map(a => `${a.slice(0,6)}…${a.slice(-4)}`).join(', ')}
+
+                {act.eligible.length === 0 ? (
+                  <p className="text-xs text-white/25 italic">No students have joined this activity yet.</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {act.eligible.map((studentAddr) => {
+                      const isConfirmed = act.confirmed.some(
+                        (c) => c.toLowerCase() === studentAddr.toLowerCase()
+                      );
+                      return (
+                        <RegisteredStudentRow
+                          key={studentAddr}
+                          actId={act.id}
+                          studentAddr={studentAddr}
+                          isConfirmed={isConfirmed}
+                          contracts={contracts}
+                          onConfirmed={loadActivities}
+                        />
+                      );
+                    })}
                   </div>
                 )}
               </div>
