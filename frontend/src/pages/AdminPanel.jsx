@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { useWallet } from '../hooks/useWallet';
 import TxButton from '../components/TxButton';
@@ -68,6 +69,7 @@ function RegisteredStudentRow({ actId, studentAddr, isConfirmed, contracts, onCo
 
 export default function AdminPanel() {
   const { account, isAdmin, contracts } = useWallet();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab]       = useState('activities'); // activities | rewards | polls | redemptions
 
   // ── Create Activity ──
@@ -235,19 +237,25 @@ export default function AdminPanel() {
 
   if (!account) {
     return (
-      <div className="glass-card p-16 text-center animate-fade-in">
+      <div className="glass-card p-16 text-center animate-fade-in flex flex-col items-center justify-center">
         <WrenchScrewdriverIcon className="w-14 h-14 mx-auto mb-4 text-white/20" />
-        <p className="text-white/50">Connect your wallet to access the admin command center.</p>
+        <p className="text-white/50 mb-6">Connect your wallet to access the admin command center.</p>
+        <button onClick={() => navigate('/')} className="btn-secondary text-xs px-4 py-2">
+          ← Back to Home
+        </button>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="glass-card p-16 text-center animate-fade-in border-red-500/20 bg-red-500/5">
+      <div className="glass-card p-16 text-center animate-fade-in border-red-500/20 bg-red-500/5 flex flex-col items-center justify-center">
         <WrenchScrewdriverIcon className="w-14 h-14 mx-auto mb-4 text-red-400/60" />
         <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
-        <p className="text-white/50 text-sm">This section is strictly reserved for the university administrator wallet.</p>
+        <p className="text-white/50 text-sm mb-6">This section is strictly reserved for the university administrator wallet.</p>
+        <button onClick={() => navigate('/activities')} className="btn-primary text-xs px-4 py-2">
+          Explore Student Activities →
+        </button>
       </div>
     );
   }

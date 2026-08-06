@@ -21,6 +21,8 @@ export default function ConfirmDialog({
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
   variant = 'danger',
+  icon: CustomIcon,
+  loading = false,
   onConfirm,
   onCancel,
 }) {
@@ -35,21 +37,37 @@ export default function ConfirmDialog({
 
   // Close on Escape key
   useEffect(() => {
-    if (!open) return;
+    if (!open || loading) return;
     const handler = (e) => { if (e.key === 'Escape') onCancel?.(); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [open, onCancel]);
+  }, [open, loading, onCancel]);
 
   if (!open) return null;
 
   const isDanger  = variant === 'danger';
-  const Icon      = isDanger ? XCircleIcon : ExclamationTriangleIcon;
-  const iconBg    = isDanger ? 'bg-red-500/15' : 'bg-amber-500/15';
-  const iconColor = isDanger ? 'text-red-400'  : 'text-amber-400';
+  const isWarning = variant === 'warning';
+  const isBrand   = variant === 'brand' || variant === 'info';
+
+  const Icon      = CustomIcon || (isDanger ? XCircleIcon : isWarning ? ExclamationTriangleIcon : SparklesIcon);
+  
+  const iconBg    = isDanger 
+    ? 'bg-red-500/15' 
+    : isWarning 
+    ? 'bg-amber-500/15' 
+    : 'bg-brand-500/15';
+    
+  const iconColor = isDanger 
+    ? 'text-red-400'  
+    : isWarning 
+    ? 'text-amber-400' 
+    : 'text-brand-400';
+    
   const confirmBg = isDanger
     ? 'bg-red-500/20 border border-red-500/40 text-red-300 hover:bg-red-500/35'
-    : 'bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/35';
+    : isWarning
+    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/35'
+    : 'bg-brand-gradient text-white hover:opacity-90 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
 
   return (
     /* Backdrop */
@@ -62,7 +80,7 @@ export default function ConfirmDialog({
       {/* Blurred dark overlay */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onCancel}
+        onClick={() => !loading && onCancel?.()}
       />
 
       {/* Dialog panel */}
@@ -72,7 +90,8 @@ export default function ConfirmDialog({
           {/* Close button */}
           <button
             onClick={onCancel}
-            className="absolute top-4 right-4 text-white/30 hover:text-white/70 transition-colors"
+            disabled={loading}
+            className="absolute top-4 right-4 text-white/30 hover:text-white/70 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Close"
           >
             <XMarkIcon className="w-5 h-5" />
@@ -88,7 +107,7 @@ export default function ConfirmDialog({
                 {title}
               </h3>
               {message && (
-                <p className="text-sm text-white/50 mt-1 leading-relaxed">{message}</p>
+                <div className="text-sm text-white/60 mt-1 leading-relaxed">{message}</div>
               )}
             </div>
           </div>
@@ -101,15 +120,20 @@ export default function ConfirmDialog({
             <button
               ref={cancelRef}
               onClick={onCancel}
+              disabled={loading}
               className="px-4 py-2 rounded-xl text-sm font-medium bg-white/[0.06] border border-white/[0.10]
-                         text-white/70 hover:text-white hover:bg-white/[0.10] transition-all duration-150"
+                         text-white/70 hover:text-white hover:bg-white/[0.10] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {cancelLabel}
             </button>
             <button
               onClick={onConfirm}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 active:scale-95 ${confirmBg}`}
+              disabled={loading}
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${confirmBg}`}
             >
+              {loading && (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              )}
               {confirmLabel}
             </button>
           </div>

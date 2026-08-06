@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../hooks/useWallet';
+import { ADMIN_ADDRESS } from '../contracts';
 import {
   BoltIcon, TrophyIcon, MegaphoneIcon, PhotoIcon,
   ShoppingBagIcon, ArrowRightIcon, ShieldCheckIcon,
@@ -59,7 +60,8 @@ export default function Landing() {
       // Only navigate if the wallet was actually connected (user didn't cancel)
       const accounts = await window.ethereum?.request({ method: 'eth_accounts' });
       if (accounts && accounts.length > 0) {
-        navigate(isAdmin ? '/admin' : '/activities');
+        const isConnAdmin = accounts[0].toLowerCase() === ADMIN_ADDRESS.toLowerCase();
+        navigate(isConnAdmin ? '/admin' : '/activities');
       } else {
         setWalletError('Connection cancelled. Please approve MetaMask to continue.');
       }

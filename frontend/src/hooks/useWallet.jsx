@@ -9,10 +9,10 @@ import {
 const WalletContext = createContext(null);
 
 export function WalletProvider({ children }) {
-  const [account, setAccount]   = useState(null);
+  const [account, setAccount] = useState(null);
   const [provider, setProvider] = useState(null);
-  const [signer, setSigner]     = useState(null);
-  const [chainId, setChainId]   = useState(null);
+  const [signer, setSigner] = useState(null);
+  const [chainId, setChainId] = useState(null);
   const [connecting, setConnecting] = useState(false);
 
   const isAdmin = account
@@ -34,17 +34,17 @@ export function WalletProvider({ children }) {
   }, [signer]);
 
   const contracts = {
-    CRT:      () => getReadContract('CampusRewardToken', CampusRewardTokenABI),
-    NFT:      () => getReadContract('AchievementNFT', AchievementNFTABI),
+    CRT: () => getReadContract('CampusRewardToken', CampusRewardTokenABI),
+    NFT: () => getReadContract('AchievementNFT', AchievementNFTABI),
     Activity: () => getReadContract('ActivityManager', ActivityManagerABI),
-    Reward:   () => getReadContract('RewardManager', RewardManagerABI),
-    Voting:   () => getReadContract('Voting', VotingABI),
+    Reward: () => getReadContract('RewardManager', RewardManagerABI),
+    Voting: () => getReadContract('Voting', VotingABI),
 
-    CRTw:      () => getWriteContract('CampusRewardToken', CampusRewardTokenABI),
-    NFTw:      () => getWriteContract('AchievementNFT', AchievementNFTABI),
+    CRTw: () => getWriteContract('CampusRewardToken', CampusRewardTokenABI),
+    NFTw: () => getWriteContract('AchievementNFT', AchievementNFTABI),
     Activityw: () => getWriteContract('ActivityManager', ActivityManagerABI),
-    Rewardw:   () => getWriteContract('RewardManager', RewardManagerABI),
-    Votingw:   () => getWriteContract('Voting', VotingABI),
+    Rewardw: () => getWriteContract('RewardManager', RewardManagerABI),
+    Votingw: () => getWriteContract('Voting', VotingABI),
   };
 
   const connect = useCallback(async () => {
@@ -100,7 +100,7 @@ export function WalletProvider({ children }) {
     window.ethereum.on('accountsChanged', handleAccountsChanged);
     window.ethereum.on('chainChanged', handleChainChanged);
 
-    // Auto-reconnect if already authorized
+    // Auto-reconnect if already authorized 
     window.ethereum.request({ method: 'eth_accounts' }).then((accounts) => {
       if (accounts.length > 0) {
         connect();
