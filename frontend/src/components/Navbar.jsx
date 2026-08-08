@@ -9,10 +9,10 @@ import {
 const studentNavItems = [
   { to: '/', label: 'Home', Icon: HomeIcon },
   { to: '/activities', label: 'Activities', Icon: BoltIcon },
-  { to: '/dashboard', label: 'Dashboard', Icon: Squares2X2Icon },
   { to: '/store', label: 'Reward Store', Icon: ShoppingBagIcon },
   { to: '/voting', label: 'Voting', Icon: MegaphoneIcon },
   { to: '/gallery', label: 'NFT Gallery', Icon: PhotoIcon },
+  { to: '/dashboard', label: 'Dashboard', Icon: Squares2X2Icon },
 ];
 
 const adminNavItems = [
